@@ -1,0 +1,19 @@
+{
+  "name": "url-redirector",
+  "version": "1.0.0",
+  "description": "Dynamic multi-route URL redirector with traffic split and admin portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": ["url-redirector", "express", "ejs", "traffic-split"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}

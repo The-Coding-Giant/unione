@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Clean Navbar -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="/admin" class="brand">
+        <span>⚡ RedirectFlow</span>
+        <span class="brand-tag">Admin</span>
+      </a>
+      <div class="nav-actions">
+        <span><%= adminUser %></span>
+        <span>•</span>
+        <a href="/admin/logout" class="btn btn-outline btn-sm">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Flash Notifications -->
+    <% if (flash) { %>
+      <div class="alert alert-<%= flash.type === 'error' ? 'error' : 'success' %>">
+        <%= flash.message %>
+      </div>
+    <% } %>
+
+    <!-- Add Redirect Card -->
+    <section class="card">
+      <div class="card-header">
+        <h2 class="card-title">Add New Redirect</h2>
+      </div>
+      <div class="card-body">
+        <form action="/admin/routes/create" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="route-path">Route Path</label>
+            <div class="route-input-group">
+              <span class="route-prefix"><%= baseUrl %>/</span>
+              <input 
+                type="text" 
+                id="route-path" 
+                name="path" 
+                class="input" 
+                placeholder="app, promo, or leave empty for /" 
+                required
+              >
+            </div>
+            <div class="form-hint">Enter <code>/</code> for homepage redirect, or any sub-path like <code>app</code>.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="target-urls">Destination URL(s)</label>
+            <textarea 
+              id="target-urls" 
+              name="targetUrls" 
+              class="textarea" 
+              placeholder="https://example.com&#10;https://another-example.com (optional: add multiple URLs for random rotation)" 
+              required
+            ></textarea>
+            <div class="form-hint">💡 Enter 1 destination URL, or multiple URLs (one per line) to randomly rotate visitors.</div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Save Redirect</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Configured Routes List -->
+    <section class="routes-container">
+      <div class="routes-header">
+        <h2 class="routes-title">Active Redirects (<%= routes.length %>)</h2>
+      </div>
+
+      <% if (routes.length === 0) { %>
+        <div class="empty-box">
+          No redirects configured yet. Add your first redirect route above.
+        </div>
+      <% } else { %>
+        <% routes.forEach(route => { %>
+          <% 
+            const directUrl = `${baseUrl}${route.path === '/' ? '' : route.path}`;
+            const activeTargets = route.urls || [];
+            const splitPct = activeTargets.length > 0 ? (100 / activeTargets.length).toFixed(0) : 0;
+          %>
+          <div class="route-item">
+            <!-- Route Header Bar -->
+            <div class="route-top">
+              <div class="route-link-preview">
+                <span class="route-badge"><%= route.path %></span>
+                <span style="color: var(--text-dim);">➜</span>
+                <span style="color: var(--text-muted);"><%= directUrl %></span>
+              </div>
+              <div class="route-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="copyLink('<%= directUrl %>')">
+                  📋 Copy
+                </button>
+                <a href="<%= directUrl %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+                  ↗ Test
+                </a>
+                <form action="/admin/routes/delete" method="POST" onsubmit="return confirm('Delete this redirect route?');" style="display: inline;">
+                  <input type="hidden" name="path" value="<%= route.path %>">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Destinations Section -->
+            <div class="route-body">
+              <div class="targets-header">
+                <span>Destination URLs (<%= route.urls.length %>)</span>
+                <% if (route.urls.length > 1) { %>
+                  <span style="color: #60a5fa;">🎲 Randomly choosing 1 URL (~<%= splitPct %>% each)</span>
+                <% } else { %>
+                  <span style="color: var(--text-muted);">Direct Redirect</span>
+                <% } %>
+              </div>
+
+              <% route.urls.forEach(target => { %>
+                <div class="target-url-row">
+                  <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                    <% if (route.urls.length > 1) { %>
+                      <span class="target-split-badge"><%= splitPct %>%</span>
+                    <% } %>
+                    <a href="<%= target.url %>" target="_blank" rel="noopener noreferrer">
+                      <%= target.url %>
+                    </a>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 0.8rem; color: var(--text-dim);"><%= target.hits || 0 %> clicks</span>
+                    <form action="/admin/routes/urls/delete" method="POST" onsubmit="return confirm('Remove this destination URL?');" style="display: inline;">
+                      <input type="hidden" name="path" value="<%= route.path %>">
+                      <input type="hidden" name="urlId" value="<%= target.id %>">
+                      <button type="submit" class="btn btn-danger btn-sm" style="padding: 2px 7px;">✕</button>
+                    </form>
+                  </div>
+                </div>
+              <% }) %>
+
+              <!-- Quick Add Another Target URL Form -->
+              <form action="/admin/routes/urls/add" method="POST" class="quick-add-bar">
+                <input type="hidden" name="path" value="<%= route.path %>">
+                <input 
+                  type="url" 
+                  name="url" 
+                  class="input" 
+                  placeholder="Add another target URL for random rotation (e.g. https://...)" 
+                  required
+                >
+                <button type="submit" class="btn btn-outline btn-sm">+ Add</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </section>
+  </main>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
