@@ -16,6 +16,8 @@ app.disable('x-powered-by');
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+const FileSessionStore = require('./lib/session-store');
+
 // Static files (CSS, client JS, assets)
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -23,16 +25,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Session middleware for admin authentication
+// Session middleware with file persistence (sessions survive server stops/restarts)
 app.use(
   session({
+    store: new FileSessionStore({
+      dir: path.join(__dirname, 'data', 'sessions'),
+      ttl: 1000 * 60 * 60 * 24 * 7 // 7 days
+    }),
     secret: process.env.SESSION_SECRET || 'fallback_secret_for_url_redirector',
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 // 24 hours
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
     }
   })
 );

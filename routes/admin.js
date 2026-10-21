@@ -55,13 +55,10 @@ router.get('/', (req, res) => {
 router.post('/routes/create', (req, res) => {
   try {
     let { path: routePath, label, targetUrls } = req.body;
-    if (!routePath) {
-      req.session.flash = { type: 'error', message: 'Route path is required.' };
-      return res.redirect('/admin');
-    }
-
-    const normPath = Store.normalizePath(routePath);
-    if (normPath.startsWith('/admin')) {
+    // Allow empty or blank route path to default to root '/'
+    const rawPath = routePath && routePath.trim() ? routePath.trim() : '/';
+    const normPath = Store.normalizePath(rawPath);
+    if (normPath === '/admin' || normPath.startsWith('/admin/')) {
       req.session.flash = { type: 'error', message: 'The /admin path is reserved for the admin portal.' };
       return res.redirect('/admin');
     }
