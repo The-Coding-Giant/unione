@@ -1,7 +1,7 @@
 # Unione hero artwork
 
 - Generated with the built-in image generation tool.
-- Final asset: `assets/unione-hero.webp`, 1983 × 793 pixels, quality 88 WebP.
+- Final asset: `public/unione-hero.webp`, 1983 × 793 pixels, quality 88 WebP.
 - Original concept: an open book becomes a mountain landscape, connecting student life with the idea of a next chapter.
 - Animated mist and smoke are separate browser effects; the artwork itself is static.
 
